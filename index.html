@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardiac Arrest & ROSC Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for better aesthetics in textareas */
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .summary-label {
+            @apply block text-sm font-medium text-gray-500;
+        }
+        .summary-value {
+            @apply text-lg font-semibold text-gray-900;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <header class="bg-white shadow-md sticky top-0 z-10">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+             <div class="flex items-center space-x-4">
+                <img src="https://iili.io/KGQOvkl.png" alt="WMEBEM Logo" class="h-10 sm:h-12">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-red-600">Cardiac Arrest & ROSC Tool</h1>
+                    <p class="text-sm text-gray-500 mt-1">For structured handover and post-ROSC care planning.</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-6">
+            <a href="https://wmebemals.netlify.app" target="_blank" rel="noopener noreferrer" class="block w-full text-center bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200">
+                Access the WMEBEM Full ALS Algorithm Tool
+            </a>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Input Column -->
+            <div class="flex flex-col space-y-6">
+
+                <!-- Handover Section -->
+                <section class="bg-white p-4 sm:p-6 rounded-xl shadow-md border border-gray-200">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 border-b-2 border-red-500 pb-2 mb-4">Pre-Hospital Handover</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                         <div>
+                            <label for="age" class="block text-sm font-medium text-gray-700 mb-1">Patient Age</label>
+                            <input type="number" id="age" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label for="patient_details" class="block text-sm font-medium text-gray-700 mb-1">Patient Details</label>
+                            <input type="text" id="patient_details" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Name, DOB, Hospital No.">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="witness_status" class="block text-sm font-medium text-gray-700 mb-1">Witnessed Status</label>
+                            <select id="witness_status" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white">
+                                <option value="Unwitnessed">Unwitnessed</option>
+                                <option value="Bystander">Bystander Witnessed</option>
+                                <option value="Paramedic">Paramedic Witnessed</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end pb-1">
+                            <label class="flex items-center space-x-3 cursor-pointer">
+                                <input type="checkbox" id="bystander_cpr" class="h-5 w-5 rounded border-gray-300 text-red-600 focus:ring-red-500">
+                                <span class="font-medium text-gray-800">Bystander CPR Performed?</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4 mb-4 pt-4 border-t border-gray-200">
+                        <div>
+                            <label for="prearrest_history" class="block text-sm font-medium text-gray-700 mb-1">Pre-Arrest History / Presenting Complaint</label>
+                            <textarea id="prearrest_history" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="e.g., PMH of IHD. Complained of central chest pain for 1 hour prior to collapse."></textarea>
+                        </div>
+                        <div>
+                            <label for="prearrest_interventions" class="block text-sm font-medium text-gray-700 mb-1">Pre-Hospital Interventions (Pre-Arrest)</label>
+                            <textarea id="prearrest_interventions" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="e.g., GTN spray x2, Aspirin 300mg given by crew pre-arrest."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 pt-4 border-t border-gray-200">
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" id="arrestOnArrival" class="h-5 w-5 rounded border-gray-300 text-red-600 focus:ring-red-500">
+                            <span class="text-lg font-semibold text-gray-800">Patient in Cardiac Arrest on Arrival?</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" id="roscAchieved" class="h-5 w-5 rounded border-gray-300 text-red-600 focus:ring-red-500">
+                            <span class="text-lg font-semibold text-gray-800">Pre-Hospital ROSC Achieved?</span>
+                        </label>
+                    </div>
+
+                    <div id="timeline_details" class="hidden mt-6 pt-4 border-t border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-3">Arrest Timeline & Details</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div><label for="time_collapse" class="block text-sm font-medium text-gray-700 mb-1">Time of Collapse</label><input type="time" id="time_collapse" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                            <div><label for="time_cpr" class="block text-sm font-medium text-gray-700 mb-1">Time of 1st CPR</label><input type="time" id="time_cpr" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                            <div><label for="time_defib" class="block text-sm font-medium text-gray-700 mb-1">Time of 1st Defib</label><input type="time" id="time_defib" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                            <div><label for="time_rosc" class="block text-sm font-medium text-gray-700 mb-1">Time of ROSC</label><input type="time" id="time_rosc" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                        </div>
+                         <div class="mt-4">
+                            <label for="downtime" class="block text-sm font-medium text-gray-700 mb-1">Total Downtime (mins) <span class="text-xs text-gray-400 font-normal">(auto-calculated)</span></label>
+                            <input type="number" id="downtime" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 mt-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Initial Rhythm(s)</label>
+                                <div id="initialRhythm" class="space-y-1"></div>
+                            </div>
+                            <div>
+                                <label for="shocks" class="block text-sm font-medium text-gray-700 mb-1">Shocks Delivered</label>
+                                <input type="number" id="shocks" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label for="prehospital_drugs" class="block text-sm font-medium text-gray-700 mb-1">Pre-Hospital Drugs (During Arrest)</label>
+                            <textarea id="prehospital_drugs" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="e.g., Adrenaline 3mg, Amiodarone 300mg"></textarea>
+                        </div>
+                         <div class="mt-4">
+                            <label for="prehospital_airway" class="block text-sm font-medium text-gray-700 mb-1">Pre-Hospital Airway</label>
+                            <textarea id="prehospital_airway" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="e.g., iGEL size 4 inserted, good EtCO2 trace"></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Post-ROSC ABCDE -->
+                <section class="bg-white p-4 sm:p-6 rounded-xl shadow-md border border-gray-200">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 border-b-2 border-red-500 pb-2 mb-4">Post-ROSC Assessment (ABCDE)</h2>
+                    <!-- Airway -->
+                    <h3 class="font-bold text-lg text-red-700 mb-2">Airway</h3>
+                    <textarea id="airway_notes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="e.g., ETT size 7.5 at 22cm at teeth, cuff inflated. Confirmed with EtCO2 and bilateral air entry."></textarea>
+                    <!-- Breathing -->
+                    <h3 class="font-bold text-lg text-red-700 mt-6 mb-2 border-t pt-4">Breathing</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <div><label for="breathing_rr" class="summary-label">Resp Rate</label><input type="number" id="breathing_rr" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                        <div><label for="breathing_sats" class="summary-label">Sats (%)</label><input type="number" id="breathing_sats" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                        <div><label for="breathing_etco2" class="summary-label">EtCO2 (kPa)</label><input type="number" id="breathing_etco2" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                    </div>
+                    <textarea id="breathing_notes" rows="2" class="mt-4 w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Ventilator settings, Auscultation findings..."></textarea>
+                    <!-- Circulation -->
+                    <h3 class="font-bold text-lg text-red-700 mt-6 mb-2 border-t pt-4">Circulation</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div><label for="circ_hr" class="summary-label">Heart Rate</label><input type="number" id="circ_hr" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                        <div><label for="circ_bp" class="summary-label">BP</label><input type="text" id="circ_bp" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="e.g., 110/70"></div>
+                        <div><label for="circ_map" class="summary-label">MAP</label><input type="number" id="circ_map" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                        <div><label for="circ_temp" class="summary-label">Temp (°C)</label><input type="number" id="circ_temp" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                    </div>
+                    <textarea id="circ_notes" rows="2" class="mt-4 w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Vasopressor requirements, peripheral circulation..."></textarea>
+                    <!-- Disability -->
+                    <h3 class="font-bold text-lg text-red-700 mt-6 mb-2 border-t pt-4">Disability</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div><label for="disability_gcsE" class="summary-label">Eyes</label><select id="disability_gcsE" class="w-full px-3 py-2 border border-gray-300 bg-white rounded-md"></select></div>
+                        <div><label for="disability_gcsV" class="summary-label">Verbal</label><select id="disability_gcsV" class="w-full px-3 py-2 border border-gray-300 bg-white rounded-md"></select></div>
+                        <div><label for="disability_gcsM" class="summary-label">Motor</label><select id="disability_gcsM" class="w-full px-3 py-2 border border-gray-300 bg-white rounded-md"></select></div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                        <div><label for="disability_pupils" class="summary-label">Pupil Description</label><input type="text" id="disability_pupils" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="e.g., 3mm, sluggish"></div>
+                        <div><label for="disability_glucose" class="summary-label">Glucose (mmol/L)</label><input type="number" id="disability_glucose" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                    </div>
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Pupil Reactivity</label>
+                        <div class="flex flex-wrap gap-x-6 gap-y-2">
+                            <label class="flex items-center space-x-2 cursor-pointer"><input type="radio" name="pupilReactivity" value="Brisk" class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"><span>Brisk</span></label>
+                            <label class="flex items-center space-x-2 cursor-pointer"><input type="radio" name="pupilReactivity" value="Sluggish" class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"><span>Sluggish</span></label>
+                            <label class="flex items-center space-x-2 cursor-pointer"><input type="radio" name="pupilReactivity" value="None" checked class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"><span>None</span></label>
+                        </div>
+                    </div>
+                    <textarea id="disability_notes" rows="2" class="mt-4 w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Sedation details, seizure activity..."></textarea>
+                    <!-- Exposure -->
+                    <h3 class="font-bold text-lg text-red-700 mt-6 mb-2 border-t pt-4">Exposure</h3>
+                    <textarea id="exposure_notes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Signs of trauma, bleeding, rashes, track marks..."></textarea>
+                </section>
+
+                <!-- Reversible Causes -->
+                <section class="bg-white p-4 sm:p-6 rounded-xl shadow-md border border-gray-200">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 border-b-2 border-red-500 pb-2 mb-4">Reversible Causes (H's & T's)</h2>
+                    <div id="reversibles" class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2"></div>
+                    <textarea id="reversibles_notes" rows="2" class="mt-4 w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Notes on suspected or excluded causes..."></textarea>
+                </section>
+
+                <!-- Blood Gas -->
+                <section class="bg-white p-4 sm:p-6 rounded-xl shadow-md border border-gray-200">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 border-b-2 border-red-500 pb-2 mb-4">Blood Gas Results</h2>
+                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                        <div class="flex items-center space-x-4">
+                            <span class="text-sm font-medium text-gray-700">Sample Type:</span>
+                            <label class="flex items-center space-x-2 cursor-pointer"><input type="radio" name="gas_type" value="VBG" checked class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"><span>VBG</span></label>
+                            <label class="flex items-center space-x-2 cursor-pointer"><input type="radio" name="gas_type" value="ABG" class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"><span>ABG</span></label>
+                        </div>
+                        <div class="flex-grow sm:max-w-xs">
+                            <label for="gas_oxygen" class="summary-label mb-1">Oxygen</label>
+                            <input type="text" id="gas_oxygen" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="e.g., 21% or 4L NP">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div><label for="gas_ph" class="summary-label">pH</label><input type="number" step="0.01" id="gas_ph" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                        <div><label for="gas_pco2" class="summary-label">pCO2 (kPa)</label><input type="number" step="0.1" id="gas_pco2" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                        <div><label for="gas_po2" class="summary-label">pO2 (kPa)</label><input type="number" step="0.1" id="gas_po2" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                        <div><label for="gas_hco3" class="summary-label">HCO3</label><input type="number" step="0.1" id="gas_hco3" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                        <div><label for="gas_be" class="summary-label">Base Excess</label><input type="number" step="0.1" id="gas_be" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                        <div><label for="gas_lactate" class="summary-label">Lactate</label><input type="number" step="0.1" id="gas_lactate" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                        <div><label for="gas_hb" class="summary-label">Hb (g/L)</label><input type="number" id="gas_hb" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                        <div><label for="gas_k" class="summary-label">K+ (mmol/L)</label><input type="number" step="0.1" id="gas_k" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                        <div><label for="gas_na" class="summary-label">Na+ (mmol/L)</label><input type="number" id="gas_na" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                    </div>
+                </section>
+
+                <!-- MIRACLE2 Score -->
+                <section class="bg-white p-4 sm:p-6 rounded-xl shadow-md border border-gray-200">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 border-b-2 border-red-500 pb-2 mb-4">MIRACLE² Score Calculator</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div id="miracle2_inputs" class="space-y-3"></div>
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+                            <h4 class="font-semibold text-red-800">Calculated Score</h4>
+                            <p id="miracle2_score" class="text-5xl font-bold text-red-600 my-2">0</p>
+                            <p class="text-sm text-red-700">Probability of poor neurological outcome:</p>
+                            <p id="miracle2_outcome" class="font-semibold text-red-800 text-lg">~3%</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Plan -->
+                <section class="bg-white p-4 sm:p-6 rounded-xl shadow-md border border-gray-200">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 border-b-2 border-red-500 pb-2 mb-4">Investigations & Management Plan</h2>
+                    <div><label for="plan_ecg" class="summary-label">12-Lead ECG Findings</label><textarea id="plan_ecg" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="e.g., Anterior STEMI, widespread ST depression"></textarea></div>
+                    <div class="mt-4"><label for="plan_bloods" class="summary-label">Bloods Sent</label><textarea id="plan_bloods" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="VBG/ABG, FBC, U&E, LFTs, Troponin, Coag, Group & Save..."></textarea></div>
+                    <div class="mt-4"><label for="plan_imaging" class="summary-label">Imaging Plan</label><textarea id="plan_imaging" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="e.g., Portable CXR, CT Head/CAP"></textarea></div>
+                    <div class="mt-4"><label for="plan_management" class="summary-label">Immediate Management Plan</label><textarea id="plan_management" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="e.g., Alert Cath Lab, Start Targeted Temperature Management (TTM), Discuss with ICU, Refer to cardiology..."></textarea></div>
+                </section>
+                
+                <!-- Clear Form Button -->
+                <div class="mt-2">
+                    <button id="clearForm" class="w-full bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">
+                        Clear Form & Start New
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Output Column -->
+            <div class="sticky top-24 self-start">
+                <section class="bg-white p-4 sm:p-6 rounded-xl shadow-md border border-gray-200">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 border-b-2 border-red-500 pb-2 mb-4">Generated Summary Note</h2>
+                    <div class="relative">
+                        <textarea readonly id="summaryNoteOutput" class="w-full h-[80vh] p-3 bg-gray-100 border border-gray-300 rounded-md font-mono text-sm whitespace-pre-wrap" aria-label="Generated summary note"></textarea>
+                        <button id="copySummary" class="absolute top-2 right-2 px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Copy</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATA STORE ---
+            const patientData = {
+                age: '', patientDetails: '',
+                witnessStatus: 'Unwitnessed', bystanderCPR: false,
+                prearrest: { history: '', interventions: '' },
+                arrestOnArrival: false, roscAchieved: false,
+                timeline: { collapse: '', cpr: '', defib: '', rosc: '', downtime: '' },
+                rhythms: [], shocks: '', prehospital_drugs: '', prehospital_airway: '',
+                postROSC: {
+                    airway: '',
+                    breathing: { rr: '', sats: '', etco2: '', notes: '' },
+                    circulation: { hr: '', bp: '', map: '', temp: '', notes: '' },
+                    disability: { gcsE: 1, gcsV: 1, gcsM: 1, pupils: '', pupilReactivity: 'None', glucose: '', notes: '' },
+                    exposure: '',
+                },
+                reversibles: { checked: [], notes: '' },
+                bloodGas: { type: 'VBG', oxygen: '', ph: '', pco2: '', po2: '', hco3: '', be: '', lactate: '', na: '', k: '', hb: '' },
+                miracle2: {
+                    score: 0,
+                    missed: 1, nonShockable: 0, pupilReactivity: 1, age: 0, // missed defaults to 1 as witness status defaults to unwitnessed
+                    changingRhythms: 0, phLow: 0, adrenaline: 0
+                },
+                plan: { ecg: '', bloods: '', imaging: '', management: '' }
+            };
+
+            // --- CONSTANTS & DEFS ---
+            const RHYTHMS = ['VF', 'pVT', 'PEA', 'Asystole'];
+            const REVERSIBLES = ['Hypoxia', 'Hypovolaemia', 'Hypo/Hyperkalaemia', 'Hypothermia', 'Thrombosis (Coronary/Pulmonary)', 'Tamponade', 'Toxins', 'Tension Pneumothorax'];
+            const GCS_E_OPTIONS = [ { value: 1, label: '1 - None' }, { value: 2, label: '2 - To Pain' }, { value: 3, label: '3 - To Voice' }, { value: 4, label: '4 - Spontaneous' }];
+            const GCS_V_OPTIONS = [ { value: 1, label: '1 - None' }, { value: 2, label: '2 - Incomprehensible' }, { value: 3, label: '3 - Inappropriate' }, { value: 4, label: '4 - Confused' }, { value: 5, label: '5 - Orientated' }];
+            const GCS_M_OPTIONS = [ { value: 1, label: '1 - None' }, { value: 2, label: '2 - Extension' }, { value: 3, label: '3 - Flexion' }, { value: 4, label: '4 - Withdraws' }, { value: 5, label: '5 - Localises Pain' }, { value: 6, label: '6 - Obeys Commands' }];
+            const MIRACLE2_COMPONENTS = [
+                { id: 'missed', label: 'Unwitnessed Arrest?' },
+                { id: 'nonShockable', label: 'Initial rhythm non-shockable?' },
+                { id: 'pupilReactivity', label: 'No Pupil Reactivity on ROSC?' },
+                { id: 'changingRhythms', label: 'Any 2 of VF/PEA/Asystole?' },
+                { id: 'phLow', label: 'pH < 7.20?' },
+                { id: 'adrenaline', label: 'Any Epinephrine Dose?', points: 2 }
+            ];
+            const MIRACLE2_OUTCOMES = { 0: '~3%', 1: '~6%', 2: '~15%', 3: '~30%', 4: '~50%', 5: '~70%', 6: '~85%', 7: '~95%', 8: '~98%', 9: '~99%', 10: '>99%' };
+
+            // --- UI ELEMENT GETTERS ---
+            const getEl = (id) => document.getElementById(id);
+            const summaryNoteOutput = getEl('summaryNoteOutput');
+
+            // --- NOTE GENERATION LOGIC ---
+            function updateNotes() {
+                let note = `**Cardiac Arrest / ROSC Patient Summary**\n\n`;
+                note += `**Patient:** ${patientData.patientDetails || 'N/S'}\n`;
+                note += `**Age:** ${patientData.age || 'N/S'}\n\n`;
+                
+                note += `**Pre-Arrest Context:**\n`;
+                note += `- Witnessed Status: ${patientData.witnessStatus}\n`;
+                note += `- Bystander CPR: ${patientData.bystanderCPR ? 'Yes' : 'No'}\n`;
+                note += `- History / Complaint: ${patientData.prearrest.history || 'Not documented.'}\n`;
+                note += `- Pre-Arrest Interventions: ${patientData.prearrest.interventions || 'None.'}\n\n`;
+
+                note += `**Status on Arrival:**\n`;
+                note += `- In Cardiac Arrest: ${patientData.arrestOnArrival ? 'Yes' : 'No'}\n`;
+                note += `- Pre-hospital ROSC: ${patientData.roscAchieved ? 'Yes' : 'No'}\n\n`;
+
+                if (patientData.arrestOnArrival || patientData.roscAchieved) {
+                    const tl = patientData.timeline;
+                    note += `**Arrest Timeline & Details:**\n`;
+                    note += `- Time of Collapse: ${tl.collapse || 'N/S'}\n`;
+                    note += `- Time of 1st CPR: ${tl.cpr || 'N/S'}\n`;
+                    note += `- Time of 1st Defib: ${tl.defib || 'N/S'}\n`;
+                    note += `- Time of ROSC: ${tl.rosc || 'N/S'}\n`;
+                    note += `- Total Downtime: ${tl.downtime || 'N/S'} minutes\n`;
+                    note += `- Initial Rhythm(s): ${patientData.rhythms.join(', ') || 'N/S'}\n`;
+                    note += `- Shocks Delivered: ${patientData.shocks || 'N/S'}\n`;
+                    note += `- Pre-hospital Drugs (During Arrest): ${patientData.prehospital_drugs || 'None'}\n`;
+                    note += `- Pre-hospital Airway: ${patientData.prehospital_airway || 'None'}\n\n`;
+                }
+
+                const pr = patientData.postROSC;
+                const totalGCS = parseInt(pr.disability.gcsE, 10) + parseInt(pr.disability.gcsV, 10) + parseInt(pr.disability.gcsM, 10);
+                note += `**Post-ROSC Assessment (ABCDE):**\n`;
+                note += `A: ${pr.airway || 'Not documented.'}\n`;
+                note += `B: RR ${pr.breathing.rr || 'N/A'}. Sats ${pr.breathing.sats || 'N/A'}%. EtCO2 ${pr.breathing.etco2 || 'N/A'} kPa. ${pr.breathing.notes ? `Notes: ${pr.breathing.notes}` : ''}\n`;
+                note += `C: HR ${pr.circulation.hr || 'N/A'}. BP ${pr.circulation.bp || 'N/A'}. MAP ${pr.circulation.map || 'N/A'}. Temp ${pr.circulation.temp || 'N/A'}°C. ${pr.circulation.notes ? `Notes: ${pr.circulation.notes}` : ''}\n`;
+                note += `D: GCS ${totalGCS} (E${pr.disability.gcsE}V${pr.disability.gcsV}M${pr.disability.gcsM}). Pupils: ${pr.disability.pupils || 'N/S'}. Reactivity: ${pr.disability.pupilReactivity}. Glucose: ${pr.disability.glucose || 'N/A'} mmol/L. ${pr.disability.notes ? `Notes: ${pr.disability.notes}` : ''}\n`;
+                note += `E: ${pr.exposure || 'Not documented.'}\n\n`;
+
+                note += `**Reversible Causes (H's & T's):**\n`;
+                note += `- Considered/Excluded: ${patientData.reversibles.checked.join(', ') || 'None'}\n`;
+                note += `- Notes: ${patientData.reversibles.notes || 'N/A'}\n\n`;
+
+                const gas = patientData.bloodGas;
+                note += `**Blood Gas Results (${gas.type} on ${gas.oxygen || 'N/A'}):**\n`;
+                note += `- pH: ${gas.ph || 'N/A'}\n- pCO2: ${gas.pco2 || 'N/A'} kPa\n- pO2: ${gas.po2 || 'N/A'} kPa\n`;
+                note += `- HCO3: ${gas.hco3 || 'N/A'}\n- Base Excess: ${gas.be || 'N/A'}\n- Lactate: ${gas.lactate || 'N/A'}\n`;
+                note += `- Hb: ${gas.hb || 'N/A'} g/L\n- Na+: ${gas.na || 'N/A'} mmol/L\n- K+: ${gas.k || 'N/A'} mmol/L\n\n`;
+
+                const m2 = patientData.miracle2;
+                note += `**MIRACLE² Score: ${m2.score}** (Prob. poor outcome: ${MIRACLE2_OUTCOMES[m2.score] || 'N/A'})\n`;
+                note += `- Missed (Unwitnessed): ${m2.missed ? 'Yes (1pt)' : 'No (0pts)'}\n`;
+                note += `- Initial Rhythm (Non-shockable): ${m2.nonShockable ? 'Yes (1pt)' : 'No (0pts)'}\n`;
+                note += `- Reactivity of Pupils (None): ${m2.pupilReactivity ? 'Yes (1pt)' : 'No (0pts)'}\n`;
+                note += `- Age points (<60=0, 60-80=1, >80=3): ${m2.age}\n`;
+                note += `- Changing Rhythms (≥2 of VF/PEA/Asystole): ${m2.changingRhythms ? 'Yes (1pt)' : 'No (0pts)'}\n`;
+                note += `- Low pH (<7.20): ${m2.phLow ? 'Yes (1pt)' : 'No (0pts)'}\n`;
+                note += `- Epinephrine Dose (Any): ${m2.adrenaline ? 'Yes (2pts)' : 'No (0pts)'}\n\n`;
+
+                const plan = patientData.plan;
+                note += `**Investigations & Management Plan:**\n`;
+                note += `- ECG: ${plan.ecg || 'Pending'}\n`;
+                note += `- Bloods: ${plan.bloods || 'Pending'}\n`;
+                note += `- Imaging: ${plan.imaging || 'Pending'}\n`;
+                note += `- Immediate Plan: ${plan.management || 'To be formulated.'}\n`;
+
+                summaryNoteOutput.value = note;
+            }
+
+            // --- CALCULATORS ---
+            function calculateAndDisplayDowntime() {
+                const collapseTime = getEl('time_collapse').value;
+                const roscTime = getEl('time_rosc').value;
+                const downtimeInput = getEl('downtime');
+
+                if (collapseTime && roscTime) {
+                    const start = new Date(`1970-01-01T${collapseTime}:00`);
+                    const end = new Date(`1970-01-01T${roscTime}:00`);
+
+                    if (end < start) { // Handles overnight arrests
+                        end.setDate(end.getDate() + 1);
+                    }
+
+                    const diffMs = end - start;
+                    const diffMins = Math.round(diffMs / 60000);
+
+                    if (!isNaN(diffMins) && diffMins >= 0) {
+                        patientData.timeline.downtime = diffMins;
+                        downtimeInput.value = diffMins;
+                    } else {
+                        patientData.timeline.downtime = '';
+                        downtimeInput.value = '';
+                    }
+                } else {
+                    patientData.timeline.downtime = '';
+                    downtimeInput.value = '';
+                }
+                updateNotes();
+            }
+
+            function calculateMiracle2Score() {
+                const m2 = patientData.miracle2;
+                let score = 0;
+                score += m2.missed;
+                score += m2.nonShockable;
+                score += m2.pupilReactivity;
+                score += m2.age; // age is already 0, 1, or 3 points
+                score += m2.changingRhythms;
+                score += m2.phLow;
+                score += m2.adrenaline * 2; // Adrenaline is 2 points
+                m2.score = score;
+
+                getEl('miracle2_score').textContent = score;
+                getEl('miracle2_outcome').textContent = MIRACLE2_OUTCOMES[score] || 'N/A';
+                updateNotes();
+            }
+
+            // --- UI INITIALIZATION & BINDING ---
+            function setupEventListeners() {
+                // Main checkboxes
+                ['arrestOnArrival', 'roscAchieved', 'bystander_cpr'].forEach(id => {
+                    getEl(id).addEventListener('change', (e) => {
+                        if (id === 'bystander_cpr') {
+                            patientData.bystanderCPR = e.target.checked;
+                        } else {
+                            patientData[id] = e.target.checked;
+                        }
+                        
+                        if (id !== 'bystander_cpr') {
+                           const showTimeline = patientData.arrestOnArrival || patientData.roscAchieved;
+                           getEl('timeline_details').classList.toggle('hidden', !showTimeline);
+                        }
+                        updateNotes();
+                    });
+                });
+
+                getEl('witness_status').addEventListener('change', (e) => {
+                    patientData.witnessStatus = e.target.value;
+                    const isUnwitnessed = e.target.value === 'Unwitnessed';
+                    patientData.miracle2.missed = isUnwitnessed ? 1 : 0;
+                    getEl('miracle2_missed_yes').checked = isUnwitnessed;
+                    getEl('miracle2_missed_no').checked = !isUnwitnessed;
+                    calculateMiracle2Score(); // This calls updateNotes
+                });
+
+                // Simple inputs
+                const inputs = [
+                    'age', 'patient_details', 'prearrest_history', 'prearrest_interventions',
+                    'time_collapse', 'time_cpr', 'time_defib', 'time_rosc', /*'downtime' removed*/ 'shocks', 
+                    'prehospital_drugs', 'prehospital_airway', 'airway_notes', 'breathing_rr', 
+                    'breathing_sats', 'breathing_etco2', 'breathing_notes', 'circ_hr', 'circ_bp', 
+                    'circ_map', 'circ_temp', 'circ_notes', 'disability_pupils', 'disability_glucose', 
+                    'disability_notes', 'exposure_notes', 'reversibles_notes', 
+                    'gas_oxygen', 'gas_ph', 'gas_pco2', 'gas_po2', 'gas_hco3', 'gas_be', 'gas_lactate', 'gas_na', 'gas_k', 'gas_hb',
+                    'plan_ecg', 'plan_bloods', 'plan_imaging', 'plan_management'
+                ];
+                inputs.forEach(id => {
+                    getEl(id).addEventListener('input', (e) => {
+                        const keys = id.split('_');
+                        if (keys.length === 1) {
+                            patientData[keys[0]] = e.target.value;
+                        } else if (keys[0] === 'gas') {
+                            patientData.bloodGas[keys[1]] = e.target.value;
+                        } else if (keys.length === 2) {
+                            if (['timeline', 'plan', 'prearrest'].includes(keys[0])) {
+                                patientData[keys[0]][keys[1]] = e.target.value;
+                            } else {
+                                patientData.postROSC[keys[0]][keys[1]] = e.target.value;
+                            }
+                        }
+                        
+                        if (id === 'time_collapse' || id === 'time_rosc') {
+                           calculateAndDisplayDowntime();
+                        }
+
+                        // Auto-update MIRACLE2
+                        if (id === 'age') {
+                            const ageVal = parseInt(e.target.value, 10);
+                            let agePoints = 0;
+                            if (!isNaN(ageVal)) {
+                                if (ageVal > 80) agePoints = 3;
+                                else if (ageVal >= 60) agePoints = 1;
+                            }
+                            patientData.miracle2.age = agePoints;
+                            getEl('miracle2_age_points').textContent = `${agePoints} pt(s)`;
+                        }
+                        if (id === 'gas_ph') {
+                            const phLow = parseFloat(e.target.value) < 7.20;
+                            patientData.miracle2.phLow = phLow ? 1 : 0;
+                            getEl('miracle2_phLow_yes').checked = phLow;
+                            getEl('miracle2_phLow_no').checked = !phLow;
+                        }
+                        if (id.startsWith('gas_') || id === 'age') calculateMiracle2Score();
+
+                        updateNotes();
+                    });
+                });
+                 // Gas type radio
+                document.getElementsByName('gas_type').forEach(radio => {
+                    radio.addEventListener('change', e => {
+                        patientData.bloodGas.type = e.target.value;
+                        updateNotes();
+                    });
+                });
+
+                // Checkbox groups
+                ['initialRhythm', 'reversibles'].forEach(id => {
+                    getEl(id).addEventListener('change', (e) => {
+                        if (e.target.type === 'checkbox') {
+                            const { value, checked } = e.target;
+                            const list = id === 'initialRhythm' ? patientData.rhythms : patientData.reversibles.checked;
+                                                        
+                            if (checked) {
+                                if (!list.includes(value)) list.push(value);
+                            } else {
+                                const index = list.indexOf(value);
+                                if (index > -1) list.splice(index, 1);
+                            }
+
+                            // Auto-update MIRACLE2 from rhythm
+                            if (id === 'initialRhythm') {
+                                const nonShockable = patientData.rhythms.some(r => ['PEA', 'Asystole'].includes(r)) && !patientData.rhythms.some(r => ['VF', 'pVT'].includes(r));
+                                patientData.miracle2.nonShockable = nonShockable ? 1 : 0;
+                                getEl('miracle2_nonShockable_yes').checked = nonShockable;
+                                getEl('miracle2_nonShockable_no').checked = !nonShockable;
+                                calculateMiracle2Score();
+                            }
+                            updateNotes();
+                        }
+                    });
+                });
+
+                // MIRACLE2 radios
+                MIRACLE2_COMPONENTS.forEach(comp => {
+                    document.getElementsByName(`miracle2_${comp.id}`).forEach(radio => {
+                        radio.addEventListener('change', e => {
+                             // The 'missed' radio is now controlled by the witness_status dropdown, so we ignore direct changes to it.
+                            if (comp.id === 'missed') return;
+                            patientData.miracle2[comp.id] = e.target.value === 'yes' ? 1 : 0;
+                            calculateMiracle2Score();
+                        });
+                    });
+                });
+
+                // Pupil Reactivity Radio
+                document.getElementsByName('pupilReactivity').forEach(radio => {
+                    radio.addEventListener('change', e => {
+                        patientData.postROSC.disability.pupilReactivity = e.target.value;
+                        const noReactivity = e.target.value === 'None';
+                        patientData.miracle2.pupilReactivity = noReactivity ? 1 : 0;
+                        getEl('miracle2_pupilReactivity_yes').checked = noReactivity;
+                        getEl('miracle2_pupilReactivity_no').checked = !noReactivity;
+                        calculateMiracle2Score();
+                        updateNotes();
+                    });
+                });
+
+                // GCS Selects
+                ['disability_gcsE', 'disability_gcsV', 'disability_gcsM'].forEach(id => {
+                    getEl(id).addEventListener('change', e => {
+                        const field = id.split('_')[1];
+                        patientData.postROSC.disability[field] = e.target.value;
+                        updateNotes();
+                    });
+                });
+                
+                // Clear form button
+                getEl('clearForm').addEventListener('click', () => {
+                    location.reload();
+                });
+            }
+
+            function populateStaticContent() {
+                // Rhythm checkboxes
+                const rhythmContainer = getEl('initialRhythm');
+                RHYTHMS.forEach(r => {
+                    rhythmContainer.innerHTML += `<label class="flex items-center space-x-2"><input type="checkbox" value="${r}" class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"><span>${r}</span></label>`;
+                });
+
+                // Reversibles checkboxes
+                const reversiblesContainer = getEl('reversibles');
+                REVERSIBLES.forEach(r => {
+                    reversiblesContainer.innerHTML += `<label class="flex items-center space-x-2"><input type="checkbox" value="${r}" class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"><span>${r}</span></label>`;
+                });
+
+                // MIRACLE2 inputs
+                const miracleContainer = getEl('miracle2_inputs');
+                MIRACLE2_COMPONENTS.forEach(comp => {
+                    miracleContainer.innerHTML += `
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-700">${comp.label}</span>
+                            <div class="flex space-x-3">
+                                <label class="flex items-center space-x-1"><input type="radio" id="miracle2_${comp.id}_yes" name="miracle2_${comp.id}" value="yes" class="h-4 w-4 text-red-600 focus:ring-red-500"><span>Yes</span></label>
+                                <label class="flex items-center space-x-1"><input type="radio" id="miracle2_${comp.id}_no" name="miracle2_${comp.id}" value="no" checked class="h-4 w-4 text-red-600 focus:ring-red-500"><span>No</span></label>
+                            </div>
+                        </div>`;
+                });
+                // Add the special non-interactive age display
+                miracleContainer.innerHTML += `
+                    <div class="flex justify-between items-center pt-2 border-t">
+                        <span class="text-sm font-medium text-gray-700">Age points (auto-calculated)</span>
+                        <div class="flex items-center justify-center w-24 px-3 py-1 text-sm bg-gray-100 border rounded-md">
+                            <span id="miracle2_age_points" class="font-bold">0 pt(s)</span>
+                        </div>
+                    </div>`;
+
+                // GCS dropdowns
+                const populateSelect = (id, options, defaultValue) => {
+                    const select = getEl(id);
+                    options.forEach(opt => select.add(new Option(opt.label, opt.value)));
+                    select.value = defaultValue;
+                };
+                populateSelect('disability_gcsE', GCS_E_OPTIONS, 1);
+                populateSelect('disability_gcsV', GCS_V_OPTIONS, 1);
+                populateSelect('disability_gcsM', GCS_M_OPTIONS, 1);
+            }
+
+            // --- COPY BUTTON ---
+            getEl('copySummary').addEventListener('click', () => {
+                const btn = getEl('copySummary');
+                navigator.clipboard.writeText(summaryNoteOutput.value).then(() => {
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+                }).catch(err => {
+                   // Fallback for environments where clipboard API is restricted (like certain iframes)
+                    try {
+                        summaryNoteOutput.select();
+                        document.execCommand('copy');
+                        btn.textContent = 'Copied!';
+                    } catch (e) {
+                        btn.textContent = 'Error';
+                    } finally {
+                        setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+                    }
+                });
+            });
+
+            // --- APP START ---
+            populateStaticContent();
+            setupEventListeners();
+            // Initial sync of MIRACLE2 UI with default data
+            getEl('miracle2_missed_yes').checked = patientData.miracle2.missed === 1;
+            getEl('miracle2_missed_no').checked = patientData.miracle2.missed !== 1;
+            calculateMiracle2Score(); // Initial calculation and note generation
+        });
+    </script>
+</body>
+</html>
+
