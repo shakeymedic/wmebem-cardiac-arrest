@@ -421,6 +421,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- DATA STORE ---
+            // UPDATED GCS DEFAULTS TO MATCH UI INITIAL STATE (GCS 15)
             const patientData = {
                 age: '', patientDetails: '',
                 witnessStatus: 'Unwitnessed', bystanderCPR: false,
@@ -432,6 +433,7 @@
                     airway: { type: 'Patent', notes: '' },
                     breathing: { rr: '', sats: '', etco2: '', sounds: 'Clear Bilat' },
                     circulation: { hr: '', bp: '', map: '', temp: '', notes: '' },
+                    // GCS defaults now 4, 5, 6 (Total 15)
                     disability: { gcsE: 4, gcsV: 5, gcsM: 6, pupilsEq: 'Equal', pupilsSize: '', pupilReactivity: 'None', glucose: '' },
                     exposure: { temp: '', notes: '' },
                 },
@@ -573,11 +575,15 @@
                 const popSel = (id, max) => {
                     const s = getEl(id);
                     for(let i=max; i>=1; i--) s.add(new Option(i,i));
+                    // Set default value on the select element to match patientData default
+                    if (id === 'disability_gcsE') s.value = patientData.postROSC.disability.gcsE;
+                    if (id === 'disability_gcsV') s.value = patientData.postROSC.disability.gcsV;
+                    if (id === 'disability_gcsM') s.value = patientData.postROSC.disability.gcsM;
                 };
                 popSel('disability_gcsE', 4); popSel('disability_gcsV', 5); popSel('disability_gcsM', 6);
 
                 setupListeners();
-                updateNotes();
+                updateNotes(); // Initial call to pre-fill the log
             }
 
             // --- LISTENERS ---
@@ -690,9 +696,12 @@
                 bind('circ_map', patientData.postROSC.circulation, 'map');
                 bind('circ_temp', patientData.postROSC.circulation, 'temp');
                 bind('circ_notes', patientData.postROSC.circulation, 'notes');
-                bind('disability_gcsE', patientData.postROSC.disability, 'gcsE'); 
-                bind('disability_gcsV', patientData.postROSC.disability, 'gcsV');
-                bind('disability_gcsM', patientData.postROSC.disability, 'gcsM');
+                
+                // GCS Select bindings
+                getEl('disability_gcsE').addEventListener('change', e => { patientData.postROSC.disability.gcsE = parseInt(e.target.value); updateNotes(); }); 
+                getEl('disability_gcsV').addEventListener('change', e => { patientData.postROSC.disability.gcsV = parseInt(e.target.value); updateNotes(); });
+                getEl('disability_gcsM').addEventListener('change', e => { patientData.postROSC.disability.gcsM = parseInt(e.target.value); updateNotes(); });
+                
                 bind('disability_pupils_size', patientData.postROSC.disability, 'pupilsSize');
                 bind('disability_glucose', patientData.postROSC.disability, 'glucose');
                 bind('exposure_temp', patientData.postROSC.exposure, 'temp');
@@ -736,21 +745,64 @@
                     }
                 });
 
-                getEl('clearForm').addEventListener('click', () => { if(confirm('Reset all data?')) location.reload(); });
+                getEl('clearForm').addEventListener('click', () => { if(confirm('Reset form? All data will be lost.')) location.reload(); });
                 
-                // UPDATED COPY HANDLER
-                getEl('copySummary').addEventListener('click', () => { 
-                    // Use innerText to copy clean text from the contenteditable div
-                    navigator.clipboard.writeText(getEl('summaryNoteOutput').innerText); 
-                    const btn = getEl('copySummary');
-                    btn.textContent = 'COPIED!';
-                    btn.classList.add('bg-green-600', 'hover:bg-green-700');
-                    btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                    setTimeout(() => {
-                        btn.textContent = 'Copy Rich Text'; // Updated to match button label
-                        btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                        btn.classList.remove('bg-green-600', 'hover:bg-green-700');
-                    }, 2000);
+                // COPY HANDLER: Copies HTML content (Rich Text) for pasting into compatible editors (e.g. Word, EHR)
+                getEl('copySummary').addEventListener('click', async () => { 
+                    const outputDiv = getEl('summaryNoteOutput');
+                    
+                    // Fallback to text for simple pasting
+                    const text = outputDiv.innerText;
+                    
+                    // For rich text copy, we need to manually construct the ClipboardItem.
+                    // This relies on modern browser capabilities. 
+                    if (navigator.clipboard.write) {
+                        try {
+                            const html = outputDiv.innerHTML;
+                            const htmlBlob = new Blob([html], { type: 'text/html' });
+                            const textBlob = new Blob([text], { type: 'text/plain' });
+                            
+                            await navigator.clipboard.write([
+                                new ClipboardItem({ 
+                                    'text/html': htmlBlob, 
+                                    'text/plain': textBlob 
+                                })
+                            ]);
+
+                            const btn = getEl('copySummary');
+                            btn.textContent = 'COPIED!';
+                            btn.classList.add('bg-green-600', 'hover:bg-green-700');
+                            btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                            setTimeout(() => {
+                                btn.textContent = 'Copy Rich Text';
+                                btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                                btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                            }, 2000);
+
+                        } catch (err) {
+                            console.error('Failed to copy rich text, falling back to simple copy.', err);
+                            navigator.clipboard.writeText(text); // Fallback to simple text copy
+                        }
+                    } else if (document.execCommand) {
+                         // Older method fallback
+                        const range = document.createRange();
+                        range.selectNodeContents(outputDiv);
+                        const selection = window.getSelection();
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                        document.execCommand('copy');
+                        selection.removeAllRanges();
+
+                        const btn = getEl('copySummary');
+                        btn.textContent = 'COPIED!';
+                        btn.classList.add('bg-green-600', 'hover:bg-green-700');
+                        btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                        setTimeout(() => {
+                            btn.textContent = 'Copy Rich Text';
+                            btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                            btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                        }, 2000);
+                    }
                 });
             }
 
