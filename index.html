@@ -20,7 +20,7 @@
         input, textarea, select { border-color: #94a3b8; outline: none; transition: all 0.2s; }
         input:focus, textarea:focus, select:focus { border-color: #2563eb; ring: 2px; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2); }
 
-        /* Rich Text Output Styles */
+        /* Rich Text Output Styles (ADDED FROM TRAUMA TOOL) */
         .rich-output {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             font-size: 0.85rem;
@@ -34,6 +34,8 @@
             overflow-y: auto;
             white-space: pre-wrap; 
         }
+        .rich-output strong { font-weight: 800; color: #0f172a; }
+        .rich-output u { text-decoration: underline; }
 
         /* Buttons */
         .std-btn { 
@@ -130,7 +132,7 @@
     <main class="container mx-auto max-w-7xl px-4 py-6">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            <div class="lg:col-span-8 flex flex-col gap-6">
+            <div class="lg:col-span-7 xl:col-span-8 flex flex-col gap-6">
 
                 <a href="https://wmebemals.netlify.app" target="_blank" class="sm:hidden flex items-center justify-center w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition shadow-md border-2 border-red-800 text-sm uppercase">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
@@ -399,16 +401,16 @@
 
             </div>
 
-            <div class="lg:col-span-4 relative">
+            <div class="lg:col-span-5 xl:col-span-4 relative">
                 <div class="sticky top-24 h-fit no-print space-y-4">
                     <div id="epr-log-container" class="bg-white p-4 rounded-xl shadow-lg border border-slate-300">
                         <div class="flex justify-between items-center mb-3">
                             <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wide">Generated Note</h2>
                             <button type="button" id="copySummary" class="px-3 py-1 text-xs font-bold bg-blue-600 text-white rounded hover:bg-blue-700 transition shadow-sm">
-                                Copy Text
+                                Copy Rich Text
                             </button>
                         </div>
-                        <textarea readonly id="summaryNoteOutput" class="w-full h-[60vh] p-3 bg-slate-50 border border-slate-300 rounded-md font-mono text-xs leading-relaxed resize-none focus:outline-none"></textarea>
+                        <div id="summaryNoteOutput" contenteditable="true" class="rich-output focus:ring-2 ring-blue-500 ring-offset-2"></div>
                     </div>
                 </div>
             </div>
@@ -430,7 +432,7 @@
                     airway: { type: 'Patent', notes: '' },
                     breathing: { rr: '', sats: '', etco2: '', sounds: 'Clear Bilat' },
                     circulation: { hr: '', bp: '', map: '', temp: '', notes: '' },
-                    disability: { gcsE: 1, gcsV: 1, gcsM: 1, pupilsEq: 'Equal', pupilsSize: '', pupilReactivity: 'None', glucose: '' },
+                    disability: { gcsE: 4, gcsV: 5, gcsM: 6, pupilsEq: 'Equal', pupilsSize: '', pupilReactivity: 'None', glucose: '' },
                     exposure: { temp: '', notes: '' },
                 },
                 reversibles: { checked: [], notes: '' },
@@ -450,53 +452,66 @@
             
             const getEl = (id) => document.getElementById(id);
 
-            // --- NOTE GENERATOR ---
+            // --- NOTE GENERATOR (UPDATED TO GENERATE HTML/RICH TEXT) ---
             function updateNotes() {
                 const d = new Date();
                 const timestamp = `${d.getDate()}/${d.getMonth()+1} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
                 
-                let n = `*** CARDIAC ARREST PROFORMA ***\nDoc: ${timestamp}\n\n`;
+                let n = `<strong>*** CARDIAC ARREST PROFORMA ***</strong><br>Doc: ${timestamp}<br><br>`;
                 
-                n += `ID: ${patientData.patientDetails || 'Unknown'} | Age: ${patientData.age || '?'}\n`;
-                n += `Witnessed: ${patientData.witnessStatus} | Bystander CPR: ${patientData.bystanderCPR?'YES':'No'}\n`;
-                n += `Hx: ${patientData.prearrest.history || '-'}\nRx: ${patientData.prearrest.interventions || '-'}\n\n`;
+                n += `<strong>ID:</strong> ${patientData.patientDetails || 'Unknown'} | <strong>Age:</strong> ${patientData.age || '?'}<br>`;
+                n += `Witnessed: ${patientData.witnessStatus} | Bystander CPR: ${patientData.bystanderCPR?'YES':'No'}<br>`;
+                n += `Hx: ${patientData.prearrest.history || '-'} <br>Rx: ${patientData.prearrest.interventions || '-'}<br><br>`;
                 
-                n += `--- EVENTS ---\n`;
-                n += `Arrest on Arrival: ${patientData.arrestOnArrival?'YES':'No'} | Pre-Hosp ROSC: ${patientData.roscAchieved?'YES':'No'}\n`;
-                if(patientData.rearrested) n += `!!! PATIENT RE-ARRESTED POST-ROSC !!!\n`;
+                n += `<u><strong>--- EVENTS ---</strong></u><br>`;
+                n += `<strong>Arrest on Arrival:</strong> ${patientData.arrestOnArrival?'YES':'No'} | <strong>Pre-Hosp ROSC:</strong> ${patientData.roscAchieved?'YES':'No'}<br>`;
+                if(patientData.rearrested) n += `<strong>!!! PATIENT RE-ARRESTED POST-ROSC !!!</strong><br>`;
                 
                 if(patientData.arrestOnArrival || patientData.roscAchieved) {
                     const t = patientData.timeline;
-                    n += `Times: Col ${t.collapse||'-'} / CPR ${t.cpr||'-'} / Defib ${t.defib||'-'} / ROSC ${t.rosc||'-'}\n`;
-                    n += `Total Downtime: ${t.downtime||'?'} mins\n`;
-                    n += `Rhythms: ${patientData.rhythms.join(', ')}\n`;
-                    n += `Shocks: ${patientData.shocks||'0'} | Drugs: ${patientData.prehospital_drugs||'-'}\n`;
+                    n += `Times: Col ${t.collapse||'-'} / CPR ${t.cpr||'-'} / Defib ${t.defib||'-'} / ROSC ${t.rosc||'-'}<br>`;
+                    n += `Total Downtime: ${t.downtime||'?'} mins<br>`;
+                    n += `Rhythms: ${patientData.rhythms.join(', ')}<br>`;
+                    n += `Shocks: ${patientData.shocks||'0'} | Drugs: ${patientData.prehospital_drugs||'-'}<br>`;
                 }
                 
-                n += `\n--- POST-ROSC ---\n`;
+                n += `<br><u><strong>--- POST-ROSC ---</strong></u><br>`;
                 const pr = patientData.postROSC;
-                n += `A: ${pr.airway.type}. ${pr.airway.notes}\n`;
-                n += `B: ${pr.breathing.sounds}. RR ${pr.breathing.rr||'-'} Sats ${pr.breathing.sats||'-'}% EtCO2 ${pr.breathing.etco2||'-'}\n`;
-                n += `C: HR ${pr.circulation.hr||'-'} BP ${pr.circulation.bp||'-'} MAP ${pr.circulation.map||'-'} T ${pr.circulation.temp||'-'}. ${pr.circulation.notes}\n`;
+                n += `<strong>A:</strong> ${pr.airway.type}. ${pr.airway.notes}<br>`;
+                n += `<strong>B:</strong> ${pr.breathing.sounds}. RR ${pr.breathing.rr||'-'} Sats ${pr.breathing.sats||'-'}% EtCO2 ${pr.breathing.etco2||'-'}<br>`;
+                
+                // Calculate MAP for rich text output, mimicking Trauma Tool calculation style
+                let mapVal = patientData.postROSC.circulation.map || '-';
+                let bp = patientData.postROSC.circulation.bp;
+                if(bp && bp.includes('/')) {
+                    const parts = bp.split('/');
+                    const sys = parseInt(parts[0]);
+                    const dia = parseInt(parts[1]);
+                    if(!isNaN(sys) && !isNaN(dia)) {
+                        mapVal = Math.round((sys + (2*dia))/3);
+                    }
+                }
+                
+                n += `<strong>C:</strong> HR ${pr.circulation.hr||'-'} BP ${pr.circulation.bp||'-'} MAP ${mapVal} T ${pr.circulation.temp||'-'}. ${pr.circulation.notes}<br>`;
                 
                 const gcs = parseInt(pr.disability.gcsE)+parseInt(pr.disability.gcsV)+parseInt(pr.disability.gcsM);
-                n += `D: GCS ${gcs} (E${pr.disability.gcsE}V${pr.disability.gcsV}M${pr.disability.gcsM}). Pupils: ${pr.disability.pupilsEq} ${pr.disability.pupilsSize} (${pr.disability.pupilReactivity}). BM ${pr.disability.glucose||'-'}\n`;
-                n += `E: Temp ${pr.exposure.temp||'-'}°C. ${pr.exposure.notes||'-'}\n`;
+                n += `<strong>D:</strong> GCS ${gcs} (E${pr.disability.gcsE}V${pr.disability.gcsV}M${pr.disability.gcsM}). Pupils: ${pr.disability.pupilsEq} ${pr.disability.pupilsSize} (${pr.disability.pupilReactivity}). BM ${pr.disability.glucose||'-'}<br>`;
+                n += `<strong>E:</strong> Temp ${pr.exposure.temp||'-'}°C. ${pr.exposure.notes||'-'}<br>`;
                 
-                n += `\nSuspected Cause(s): ${patientData.reversibles.checked.join(', ') || 'None selected'}. ${patientData.reversibles.notes}\n`;
+                n += `<br><strong>Suspected Cause(s):</strong> ${patientData.reversibles.checked.join(', ') || 'None selected'}. ${patientData.reversibles.notes}<br>`;
                 
                 const gas = patientData.bloodGas;
-                n += `Gas (${gas.type}): FiO2 ${gas.fio2||'-'} | pH ${gas.ph} | pCO2 ${gas.pco2} | pO2 ${gas.po2} | Lac ${gas.lactate} | K ${gas.k}\n`;
+                n += `<strong>Gas (${gas.type}):</strong> FiO2 ${gas.fio2||'-'} | pH ${gas.ph} | pCO2 ${gas.pco2} | pO2 ${gas.po2} | Lac ${gas.lactate} | K ${gas.k}<br>`;
                 
                 const m2 = patientData.miracle2;
-                n += `\nMIRACLE² Score: ${m2.score} (${MIRACLE2_OUTCOMES[m2.score] || '?'})\n`;
+                n += `<br><strong>MIRACLE² Score:</strong> ${m2.score} (${MIRACLE2_OUTCOMES[m2.score] || '?'})<br>`;
                 
-                n += `\n--- PLAN ---\n`;
-                n += `Further Resus: ${patientData.plan.furtherResus.toUpperCase()}\n`;
-                n += `ECG/Img: ${patientData.plan.ecg||'-'}\n`;
+                n += `<br><u><strong>--- PLAN ---</strong></u><br>`;
+                n += `<strong>Further Resus:</strong> ${patientData.plan.furtherResus.toUpperCase()}<br>`;
+                n += `ECG/Img: ${patientData.plan.ecg||'-'}<br>`;
                 n += `Mgmt: ${patientData.plan.management||'-'}`;
                 
-                getEl('summaryNoteOutput').value = n;
+                getEl('summaryNoteOutput').innerHTML = n;
             }
 
             // --- CALCULATORS ---
@@ -722,14 +737,17 @@
                 });
 
                 getEl('clearForm').addEventListener('click', () => { if(confirm('Reset all data?')) location.reload(); });
+                
+                // UPDATED COPY HANDLER
                 getEl('copySummary').addEventListener('click', () => { 
-                    navigator.clipboard.writeText(getEl('summaryNoteOutput').value); 
+                    // Use innerText to copy clean text from the contenteditable div
+                    navigator.clipboard.writeText(getEl('summaryNoteOutput').innerText); 
                     const btn = getEl('copySummary');
                     btn.textContent = 'COPIED!';
                     btn.classList.add('bg-green-600', 'hover:bg-green-700');
                     btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
                     setTimeout(() => {
-                        btn.textContent = 'COPY TEXT';
+                        btn.textContent = 'Copy Rich Text'; // Updated to match button label
                         btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
                         btn.classList.remove('bg-green-600', 'hover:bg-green-700');
                     }, 2000);
