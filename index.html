@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        /* --- CORE STYLES (MATCHING TRAUMA TOOL) --- */
+        /* --- CORE STYLES --- */
         body { font-family: 'Inter', sans-serif; }
         
         /* Custom Scrollbar */
@@ -20,7 +20,7 @@
         input, textarea, select { border-color: #94a3b8; outline: none; transition: all 0.2s; }
         input:focus, textarea:focus, select:focus { border-color: #2563eb; ring: 2px; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2); }
 
-        /* Rich Text Output Styles (ADDED FROM TRAUMA TOOL) */
+        /* Rich Text Output Styles (MATCHING TRAUMA TOOL) */
         .rich-output {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             font-size: 0.85rem;
@@ -58,8 +58,8 @@
         /* Cards */
         .section-card {
             background-color: white;
-            border-radius: 0.75rem; /* rounded-xl */
-            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); /* shadow-sm */
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             border: 2px solid #cbd5e1;
             overflow: hidden;
             margin-bottom: 1.5rem;
@@ -403,7 +403,7 @@
 
             <div class="lg:col-span-5 xl:col-span-4 relative">
                 <div class="sticky top-24 h-fit no-print space-y-4">
-                    <div id="epr-log-container" class="bg-white p-4 rounded-xl shadow-lg border border-slate-300">
+                    <section class="bg-white p-4 rounded-xl shadow-lg border border-slate-300">
                         <div class="flex justify-between items-center mb-3">
                             <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wide">Generated Note</h2>
                             <button type="button" id="copySummary" class="px-3 py-1 text-xs font-bold bg-blue-600 text-white rounded hover:bg-blue-700 transition shadow-sm">
@@ -411,7 +411,7 @@
                             </button>
                         </div>
                         <div id="summaryNoteOutput" contenteditable="true" class="rich-output focus:ring-2 ring-blue-500 ring-offset-2"></div>
-                    </div>
+                    </section>
                 </div>
             </div>
 
@@ -421,7 +421,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- DATA STORE ---
-            // UPDATED GCS DEFAULTS TO MATCH UI INITIAL STATE (GCS 15)
             const patientData = {
                 age: '', patientDetails: '',
                 witnessStatus: 'Unwitnessed', bystanderCPR: false,
@@ -433,7 +432,6 @@
                     airway: { type: 'Patent', notes: '' },
                     breathing: { rr: '', sats: '', etco2: '', sounds: 'Clear Bilat' },
                     circulation: { hr: '', bp: '', map: '', temp: '', notes: '' },
-                    // GCS defaults now 4, 5, 6 (Total 15)
                     disability: { gcsE: 4, gcsV: 5, gcsM: 6, pupilsEq: 'Equal', pupilsSize: '', pupilReactivity: 'None', glucose: '' },
                     exposure: { temp: '', notes: '' },
                 },
@@ -453,21 +451,30 @@
             const MIRACLE2_OUTCOMES = { 0: '~3%', 1: '~6%', 2: '~15%', 3: '~30%', 4: '~50%', 5: '~70%', 6: '~85%', 7: '~95%', 8: '~98%', 9: '~99%', 10: '>99%' };
             
             const getEl = (id) => document.getElementById(id);
-
-            // --- NOTE GENERATOR (UPDATED TO GENERATE HTML/RICH TEXT) ---
-            function updateNotes() {
+            const getTime = () => {
                 const d = new Date();
-                const timestamp = `${d.getDate()}/${d.getMonth()+1} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-                
-                let n = `<strong>*** CARDIAC ARREST PROFORMA ***</strong><br>Doc: ${timestamp}<br><br>`;
+                return `${d.getDate()}/${d.getMonth()+1} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+            }
+
+            // --- NOTE GENERATOR (UPDATED TO MATCH TRAUMA TOOL STYLE) ---
+            function updateNotes() {
+                let n = `<strong>Cardiac Arrest & ROSC Assessment</strong><br>`;
+                n += `Date/Time: ${getTime()}<br><br>`;
                 
                 n += `<strong>ID:</strong> ${patientData.patientDetails || 'Unknown'} | <strong>Age:</strong> ${patientData.age || '?'}<br>`;
-                n += `Witnessed: ${patientData.witnessStatus} | Bystander CPR: ${patientData.bystanderCPR?'YES':'No'}<br>`;
-                n += `Hx: ${patientData.prearrest.history || '-'} <br>Rx: ${patientData.prearrest.interventions || '-'}<br><br>`;
+                n += `Witnessed: ${patientData.witnessStatus} | Bystander CPR: ${patientData.bystanderCPR?'YES':'No'}<br><br>`;
                 
-                n += `<u><strong>--- EVENTS ---</strong></u><br>`;
-                n += `<strong>Arrest on Arrival:</strong> ${patientData.arrestOnArrival?'YES':'No'} | <strong>Pre-Hosp ROSC:</strong> ${patientData.roscAchieved?'YES':'No'}<br>`;
+                if(patientData.prearrest.history || patientData.prearrest.interventions) {
+                    n += `<strong>History / Events</strong><br>`;
+                    if(patientData.prearrest.history) n += `Hx: ${patientData.prearrest.history}<br>`;
+                    if(patientData.prearrest.interventions) n += `Rx: ${patientData.prearrest.interventions}<br>`;
+                    n += `<br>`;
+                }
+                
+                n += `<strong>Timeline</strong><br>`;
                 if(patientData.rearrested) n += `<strong>!!! PATIENT RE-ARRESTED POST-ROSC !!!</strong><br>`;
+                n += `Arrest on Arrival: ${patientData.arrestOnArrival?'YES':'No'}<br>`;
+                n += `Pre-Hosp ROSC: ${patientData.roscAchieved?'YES':'No'}<br>`;
                 
                 if(patientData.arrestOnArrival || patientData.roscAchieved) {
                     const t = patientData.timeline;
@@ -476,13 +483,14 @@
                     n += `Rhythms: ${patientData.rhythms.join(', ')}<br>`;
                     n += `Shocks: ${patientData.shocks||'0'} | Drugs: ${patientData.prehospital_drugs||'-'}<br>`;
                 }
+                n += `<br>`;
                 
-                n += `<br><u><strong>--- POST-ROSC ---</strong></u><br>`;
+                n += `<strong>Post-ROSC Survey</strong><br>`;
                 const pr = patientData.postROSC;
-                n += `<strong>A:</strong> ${pr.airway.type}. ${pr.airway.notes}<br>`;
-                n += `<strong>B:</strong> ${pr.breathing.sounds}. RR ${pr.breathing.rr||'-'} Sats ${pr.breathing.sats||'-'}% EtCO2 ${pr.breathing.etco2||'-'}<br>`;
+                n += `<strong>A - Airway:</strong> ${pr.airway.type}. ${pr.airway.notes}<br>`;
+                n += `<strong>B - Breathing:</strong> ${pr.breathing.sounds}. RR ${pr.breathing.rr||'-'} | Sats ${pr.breathing.sats||'-'}% | EtCO2 ${pr.breathing.etco2||'-'}<br>`;
                 
-                // Calculate MAP for rich text output, mimicking Trauma Tool calculation style
+                // Calculate MAP
                 let mapVal = patientData.postROSC.circulation.map || '-';
                 let bp = patientData.postROSC.circulation.bp;
                 if(bp && bp.includes('/')) {
@@ -494,24 +502,26 @@
                     }
                 }
                 
-                n += `<strong>C:</strong> HR ${pr.circulation.hr||'-'} BP ${pr.circulation.bp||'-'} MAP ${mapVal} T ${pr.circulation.temp||'-'}. ${pr.circulation.notes}<br>`;
+                n += `<strong>C - Circulation:</strong> HR ${pr.circulation.hr||'-'} | BP ${pr.circulation.bp||'-'} (MAP ${mapVal}) | T ${pr.circulation.temp||'-'}.<br>`;
+                if(pr.circulation.notes) n += `&nbsp;&nbsp;&nbsp;Notes: ${pr.circulation.notes}<br>`;
                 
                 const gcs = parseInt(pr.disability.gcsE)+parseInt(pr.disability.gcsV)+parseInt(pr.disability.gcsM);
-                n += `<strong>D:</strong> GCS ${gcs} (E${pr.disability.gcsE}V${pr.disability.gcsV}M${pr.disability.gcsM}). Pupils: ${pr.disability.pupilsEq} ${pr.disability.pupilsSize} (${pr.disability.pupilReactivity}). BM ${pr.disability.glucose||'-'}<br>`;
-                n += `<strong>E:</strong> Temp ${pr.exposure.temp||'-'}°C. ${pr.exposure.notes||'-'}<br>`;
+                n += `<strong>D - Disability:</strong> GCS ${gcs} (E${pr.disability.gcsE}V${pr.disability.gcsV}M${pr.disability.gcsM}).<br>`;
+                n += `&nbsp;&nbsp;&nbsp;Pupils: ${pr.disability.pupilsEq} ${pr.disability.pupilsSize} (${pr.disability.pupilReactivity}). BM ${pr.disability.glucose||'-'}<br>`;
+                n += `<strong>E - Exposure:</strong> Temp ${pr.exposure.temp||'-'}°C. ${pr.exposure.notes||''}<br>`;
                 
                 n += `<br><strong>Suspected Cause(s):</strong> ${patientData.reversibles.checked.join(', ') || 'None selected'}. ${patientData.reversibles.notes}<br>`;
                 
                 const gas = patientData.bloodGas;
-                n += `<strong>Gas (${gas.type}):</strong> FiO2 ${gas.fio2||'-'} | pH ${gas.ph} | pCO2 ${gas.pco2} | pO2 ${gas.po2} | Lac ${gas.lactate} | K ${gas.k}<br>`;
+                n += `<strong>Investigations (${gas.type}):</strong> pH ${gas.ph} | pCO2 ${gas.pco2} | pO2 ${gas.po2} | Lac ${gas.lactate} | K ${gas.k} | FiO2 ${gas.fio2||'-'}<br>`;
                 
                 const m2 = patientData.miracle2;
-                n += `<br><strong>MIRACLE² Score:</strong> ${m2.score} (${MIRACLE2_OUTCOMES[m2.score] || '?'})<br>`;
+                n += `<strong>MIRACLE² Score:</strong> ${m2.score} (${MIRACLE2_OUTCOMES[m2.score] || '?'})<br>`;
                 
-                n += `<br><u><strong>--- PLAN ---</strong></u><br>`;
-                n += `<strong>Further Resus:</strong> ${patientData.plan.furtherResus.toUpperCase()}<br>`;
-                n += `ECG/Img: ${patientData.plan.ecg||'-'}<br>`;
-                n += `Mgmt: ${patientData.plan.management||'-'}`;
+                n += `<br><strong>Management Plan</strong><br>`;
+                n += `Further Resus: <strong>${patientData.plan.furtherResus.toUpperCase()}</strong><br>`;
+                if(patientData.plan.ecg) n += `ECG/Img: ${patientData.plan.ecg}<br>`;
+                if(patientData.plan.management) n += `${patientData.plan.management.replace(/\n/g, '<br>')}`;
                 
                 getEl('summaryNoteOutput').innerHTML = n;
             }
@@ -575,7 +585,6 @@
                 const popSel = (id, max) => {
                     const s = getEl(id);
                     for(let i=max; i>=1; i--) s.add(new Option(i,i));
-                    // Set default value on the select element to match patientData default
                     if (id === 'disability_gcsE') s.value = patientData.postROSC.disability.gcsE;
                     if (id === 'disability_gcsV') s.value = patientData.postROSC.disability.gcsV;
                     if (id === 'disability_gcsM') s.value = patientData.postROSC.disability.gcsM;
@@ -583,7 +592,7 @@
                 popSel('disability_gcsE', 4); popSel('disability_gcsV', 5); popSel('disability_gcsM', 6);
 
                 setupListeners();
-                updateNotes(); // Initial call to pre-fill the log
+                updateNotes(); 
             }
 
             // --- LISTENERS ---
@@ -677,7 +686,6 @@
                     getEl(id).addEventListener('input', e => { root[key] = e.target.value; updateNotes(); });
                 };
                 
-                // Mappings
                 bind('patient_details', patientData, 'patientDetails');
                 bind('prearrest_history', patientData.prearrest, 'history');
                 bind('prearrest_interventions', patientData.prearrest, 'interventions');
@@ -697,7 +705,6 @@
                 bind('circ_temp', patientData.postROSC.circulation, 'temp');
                 bind('circ_notes', patientData.postROSC.circulation, 'notes');
                 
-                // GCS Select bindings
                 getEl('disability_gcsE').addEventListener('change', e => { patientData.postROSC.disability.gcsE = parseInt(e.target.value); updateNotes(); }); 
                 getEl('disability_gcsV').addEventListener('change', e => { patientData.postROSC.disability.gcsV = parseInt(e.target.value); updateNotes(); });
                 getEl('disability_gcsM').addEventListener('change', e => { patientData.postROSC.disability.gcsM = parseInt(e.target.value); updateNotes(); });
@@ -747,63 +754,36 @@
 
                 getEl('clearForm').addEventListener('click', () => { if(confirm('Reset form? All data will be lost.')) location.reload(); });
                 
-                // COPY HANDLER: Copies HTML content (Rich Text) for pasting into compatible editors (e.g. Word, EHR)
-                getEl('copySummary').addEventListener('click', async () => { 
-                    const outputDiv = getEl('summaryNoteOutput');
-                    
-                    // Fallback to text for simple pasting
-                    const text = outputDiv.innerText;
-                    
-                    // For rich text copy, we need to manually construct the ClipboardItem.
-                    // This relies on modern browser capabilities. 
-                    if (navigator.clipboard.write) {
-                        try {
-                            const html = outputDiv.innerHTML;
-                            const htmlBlob = new Blob([html], { type: 'text/html' });
-                            const textBlob = new Blob([text], { type: 'text/plain' });
-                            
-                            await navigator.clipboard.write([
-                                new ClipboardItem({ 
-                                    'text/html': htmlBlob, 
-                                    'text/plain': textBlob 
-                                })
-                            ]);
-
-                            const btn = getEl('copySummary');
-                            btn.textContent = 'COPIED!';
-                            btn.classList.add('bg-green-600', 'hover:bg-green-700');
-                            btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                            setTimeout(() => {
-                                btn.textContent = 'Copy Rich Text';
-                                btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                                btn.classList.remove('bg-green-600', 'hover:bg-green-700');
-                            }, 2000);
-
-                        } catch (err) {
-                            console.error('Failed to copy rich text, falling back to simple copy.', err);
-                            navigator.clipboard.writeText(text); // Fallback to simple text copy
-                        }
-                    } else if (document.execCommand) {
-                         // Older method fallback
-                        const range = document.createRange();
-                        range.selectNodeContents(outputDiv);
-                        const selection = window.getSelection();
-                        selection.removeAllRanges();
-                        selection.addRange(range);
-                        document.execCommand('copy');
-                        selection.removeAllRanges();
-
+                // COPY HANDLER (UPDATED TO MATCH TRAUMA TOOL)
+                async function copyRichText(id) {
+                    const el = getEl(id);
+                    try {
+                        const htmlBlob = new Blob([el.innerHTML], { type: 'text/html' });
+                        const textBlob = new Blob([el.innerText], { type: 'text/plain' });
+                        await navigator.clipboard.write([
+                            new ClipboardItem({ 
+                                'text/html': htmlBlob, 
+                                'text/plain': textBlob 
+                            })
+                        ]);
+                        // Visual feedback
                         const btn = getEl('copySummary');
-                        btn.textContent = 'COPIED!';
+                        const orig = btn.innerText;
+                        btn.innerText = '✅ Copied!';
                         btn.classList.add('bg-green-600', 'hover:bg-green-700');
                         btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
                         setTimeout(() => {
-                            btn.textContent = 'Copy Rich Text';
+                            btn.innerText = orig;
                             btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
                             btn.classList.remove('bg-green-600', 'hover:bg-green-700');
                         }, 2000);
+                    } catch (err) {
+                        console.error("Copy failed", err);
+                        alert("Copy failed. Please manually select and copy.");
                     }
-                });
+                }
+
+                getEl('copySummary').addEventListener('click', () => copyRichText('summaryNoteOutput'));
             }
 
             init();
