@@ -36,6 +36,7 @@
         }
         .rich-output strong { font-weight: 800; color: #0f172a; }
         .rich-output u { text-decoration: underline; }
+        .rich-output em { color: #64748b; font-style: italic; font-size: 0.8em; }
 
         /* Buttons */
         .std-btn { 
@@ -81,8 +82,7 @@
         .toggle-radio:checked + div { background-color: #2563eb; color: white; border-color: #2563eb; }
         .toggle-radio-red:checked + div { background-color: #dc2626; color: white; border-color: #dc2626; }
         .toggle-radio-green:checked + div { background-color: #16a34a; color: white; border-color: #16a34a; }
-        .toggle-radio-slate:checked + div { background-color: #475569; color: white; border-color: #475569; }
-
+        
         /* Utility */
         label {
             display: block;
@@ -456,72 +456,78 @@
                 return `${d.getDate()}/${d.getMonth()+1} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
             }
 
-            // --- NOTE GENERATOR (UPDATED TO MATCH TRAUMA TOOL STYLE) ---
+            // --- NOTE GENERATOR (UPDATED TO MATCH TRAUMA TOOL STYLE WITH VISIBLE TEMPLATE) ---
             function updateNotes() {
+                // Generates a visible template note that updates in real-time
+                const ts = getTime();
+                
                 let n = `<strong>Cardiac Arrest & ROSC Assessment</strong><br>`;
-                n += `Date/Time: ${getTime()}<br><br>`;
+                n += `Date/Time: ${ts}<br><br>`;
                 
-                n += `<strong>ID:</strong> ${patientData.patientDetails || 'Unknown'} | <strong>Age:</strong> ${patientData.age || '?'}<br>`;
-                n += `Witnessed: ${patientData.witnessStatus} | Bystander CPR: ${patientData.bystanderCPR?'YES':'No'}<br><br>`;
+                // Handover Section
+                n += `<strong>Pre-Hospital / Handover</strong><br>`;
+                n += `Age: ${patientData.age||''} | ID: ${patientData.patientDetails||''}<br>`;
+                n += `Witnessed: ${patientData.witnessStatus} | Bystander CPR: ${patientData.bystanderCPR?'YES':'No'}<br>`;
+                n += `Hx: ${patientData.prearrest.history||''}<br>`;
+                n += `Pre-Arrest Rx: ${patientData.prearrest.interventions||''}<br><br>`;
                 
-                if(patientData.prearrest.history || patientData.prearrest.interventions) {
-                    n += `<strong>History / Events</strong><br>`;
-                    if(patientData.prearrest.history) n += `Hx: ${patientData.prearrest.history}<br>`;
-                    if(patientData.prearrest.interventions) n += `Rx: ${patientData.prearrest.interventions}<br>`;
-                    n += `<br>`;
-                }
-                
-                n += `<strong>Timeline</strong><br>`;
+                // Events Section
+                n += `<strong>Timeline & Events</strong><br>`;
+                n += `Arrest on Arrival: ${patientData.arrestOnArrival?'YES':'No'} | ROSC Achieved: ${patientData.roscAchieved?'YES':'No'}<br>`;
                 if(patientData.rearrested) n += `<strong>!!! PATIENT RE-ARRESTED POST-ROSC !!!</strong><br>`;
-                n += `Arrest on Arrival: ${patientData.arrestOnArrival?'YES':'No'}<br>`;
-                n += `Pre-Hosp ROSC: ${patientData.roscAchieved?'YES':'No'}<br>`;
                 
-                if(patientData.arrestOnArrival || patientData.roscAchieved) {
-                    const t = patientData.timeline;
-                    n += `Times: Col ${t.collapse||'-'} / CPR ${t.cpr||'-'} / Defib ${t.defib||'-'} / ROSC ${t.rosc||'-'}<br>`;
-                    n += `Total Downtime: ${t.downtime||'?'} mins<br>`;
-                    n += `Rhythms: ${patientData.rhythms.join(', ')}<br>`;
-                    n += `Shocks: ${patientData.shocks||'0'} | Drugs: ${patientData.prehospital_drugs||'-'}<br>`;
-                }
-                n += `<br>`;
+                const t = patientData.timeline;
+                n += `Times: Collapse ${t.collapse||''} | CPR ${t.cpr||''} | Defib ${t.defib||''} | ROSC ${t.rosc||''}<br>`;
+                n += `Total Downtime: ${t.downtime||''} mins<br>`;
+                n += `Rhythms: ${patientData.rhythms.join(', ')}<br>`;
+                n += `Shocks: ${patientData.shocks||''} | Arrest Drugs: ${patientData.prehospital_drugs||''}<br><br>`;
                 
+                // Post-ROSC Section
                 n += `<strong>Post-ROSC Survey</strong><br>`;
                 const pr = patientData.postROSC;
-                n += `<strong>A - Airway:</strong> ${pr.airway.type}. ${pr.airway.notes}<br>`;
-                n += `<strong>B - Breathing:</strong> ${pr.breathing.sounds}. RR ${pr.breathing.rr||'-'} | Sats ${pr.breathing.sats||'-'}% | EtCO2 ${pr.breathing.etco2||'-'}<br>`;
                 
-                // Calculate MAP
-                let mapVal = patientData.postROSC.circulation.map || '-';
-                let bp = patientData.postROSC.circulation.bp;
-                if(bp && bp.includes('/')) {
-                    const parts = bp.split('/');
+                // A
+                n += `<strong>A - Airway:</strong> ${pr.airway.type}. ${pr.airway.notes||''}<br>`;
+                
+                // B
+                n += `<strong>B - Breathing:</strong> ${pr.breathing.sounds}.<br>`;
+                n += `&nbsp;&nbsp;&nbsp;RR: ${pr.breathing.rr||''} | Sats: ${pr.breathing.sats||''}% | EtCO2: ${pr.breathing.etco2||''}<br>`;
+                
+                // C
+                // Simple MAP calculation visual
+                let mapVal = pr.circulation.map || '';
+                if(!mapVal && pr.circulation.bp.includes('/')) {
+                    const parts = pr.circulation.bp.split('/');
                     const sys = parseInt(parts[0]);
                     const dia = parseInt(parts[1]);
-                    if(!isNaN(sys) && !isNaN(dia)) {
-                        mapVal = Math.round((sys + (2*dia))/3);
-                    }
+                    if(!isNaN(sys) && !isNaN(dia)) mapVal = Math.round((sys + (2*dia))/3);
                 }
-                
-                n += `<strong>C - Circulation:</strong> HR ${pr.circulation.hr||'-'} | BP ${pr.circulation.bp||'-'} (MAP ${mapVal}) | T ${pr.circulation.temp||'-'}.<br>`;
+                n += `<strong>C - Circulation:</strong> HR: ${pr.circulation.hr||''} | BP: ${pr.circulation.bp||''} | MAP: ${mapVal} | Temp: ${pr.circulation.temp||''}<br>`;
                 if(pr.circulation.notes) n += `&nbsp;&nbsp;&nbsp;Notes: ${pr.circulation.notes}<br>`;
                 
-                const gcs = parseInt(pr.disability.gcsE)+parseInt(pr.disability.gcsV)+parseInt(pr.disability.gcsM);
-                n += `<strong>D - Disability:</strong> GCS ${gcs} (E${pr.disability.gcsE}V${pr.disability.gcsV}M${pr.disability.gcsM}).<br>`;
-                n += `&nbsp;&nbsp;&nbsp;Pupils: ${pr.disability.pupilsEq} ${pr.disability.pupilsSize} (${pr.disability.pupilReactivity}). BM ${pr.disability.glucose||'-'}<br>`;
-                n += `<strong>E - Exposure:</strong> Temp ${pr.exposure.temp||'-'}°C. ${pr.exposure.notes||''}<br>`;
+                // D
+                const gcs = (parseInt(pr.disability.gcsE)||0) + (parseInt(pr.disability.gcsV)||0) + (parseInt(pr.disability.gcsM)||0);
+                n += `<strong>D - Disability:</strong> GCS ${gcs} (E${pr.disability.gcsE} V${pr.disability.gcsV} M${pr.disability.gcsM}).<br>`;
+                n += `&nbsp;&nbsp;&nbsp;Pupils: ${pr.disability.pupilsEq} ${pr.disability.pupilsSize} (${pr.disability.pupilReactivity}). BM: ${pr.disability.glucose||''}<br>`;
                 
-                n += `<br><strong>Suspected Cause(s):</strong> ${patientData.reversibles.checked.join(', ') || 'None selected'}. ${patientData.reversibles.notes}<br>`;
+                // E
+                n += `<strong>E - Exposure:</strong> Temp ${pr.exposure.temp||''}. ${pr.exposure.notes||''}<br><br>`;
                 
-                const gas = patientData.bloodGas;
-                n += `<strong>Investigations (${gas.type}):</strong> pH ${gas.ph} | pCO2 ${gas.pco2} | pO2 ${gas.po2} | Lac ${gas.lactate} | K ${gas.k} | FiO2 ${gas.fio2||'-'}<br>`;
+                // Cause / Gas
+                n += `<strong>Investigations</strong><br>`;
+                n += `Suspected Cause(s): ${patientData.reversibles.checked.join(', ')} ${patientData.reversibles.notes}<br>`;
+                const g = patientData.bloodGas;
+                n += `Gas (${g.type}): pH ${g.ph||''} | pCO2 ${g.pco2||''} | pO2 ${g.po2||''} | HCO3 ${g.hco3||''} | BE ${g.be||''} | Lac ${g.lactate||''} | K ${g.k||''}<br>`;
+                if(g.type === 'VBG' && g.fio2) n += `FiO2: ${g.fio2}<br>`; 
+                n += `<br>`;
                 
+                // Plan
+                n += `<strong>Plan & Outcome</strong><br>`;
                 const m2 = patientData.miracle2;
-                n += `<strong>MIRACLE² Score:</strong> ${m2.score} (${MIRACLE2_OUTCOMES[m2.score] || '?'})<br>`;
-                
-                n += `<br><strong>Management Plan</strong><br>`;
+                n += `MIRACLE² Score: ${m2.score} (${MIRACLE2_OUTCOMES[m2.score]||'?'})<br>`;
                 n += `Further Resus: <strong>${patientData.plan.furtherResus.toUpperCase()}</strong><br>`;
-                if(patientData.plan.ecg) n += `ECG/Img: ${patientData.plan.ecg}<br>`;
-                if(patientData.plan.management) n += `${patientData.plan.management.replace(/\n/g, '<br>')}`;
+                n += `ECG/Img: ${patientData.plan.ecg||''}<br>`;
+                n += `Management: ${patientData.plan.management||''}`;
                 
                 getEl('summaryNoteOutput').innerHTML = n;
             }
@@ -537,6 +543,7 @@
                     const diff = Math.round((d2-d1)/60000);
                     patientData.timeline.downtime = diff;
                     getEl('downtime').value = diff;
+                    updateNotes();
                 }
             }
 
@@ -754,7 +761,7 @@
 
                 getEl('clearForm').addEventListener('click', () => { if(confirm('Reset form? All data will be lost.')) location.reload(); });
                 
-                // COPY HANDLER (UPDATED TO MATCH TRAUMA TOOL)
+                // COPY HANDLER (UPDATED TO MATCH TRAUMA TOOL & ROBUST FOR RICH TEXT)
                 async function copyRichText(id) {
                     const el = getEl(id);
                     try {
