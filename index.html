@@ -589,10 +589,12 @@
                 // GCS
                 const popSel = (id, max) => {
                     const s = getEl(id);
-                    for(let i=max; i>=1; i--) s.add(new Option(i,i));
-                    if (id === 'disability_gcsE') s.value = patientData.postROSC.disability.gcsE;
-                    if (id === 'disability_gcsV') s.value = patientData.postROSC.disability.gcsV;
-                    if (id === 'disability_gcsM') s.value = patientData.postROSC.disability.gcsM;
+                    if(s) {
+                        for(let i=max; i>=1; i--) s.add(new Option(i,i));
+                        if (id === 'disability_gcsE') s.value = patientData.postROSC.disability.gcsE;
+                        if (id === 'disability_gcsV') s.value = patientData.postROSC.disability.gcsV;
+                        if (id === 'disability_gcsM') s.value = patientData.postROSC.disability.gcsM;
+                    }
                 };
                 popSel('disability_gcsE', 4); popSel('disability_gcsV', 5); popSel('disability_gcsM', 6);
 
@@ -621,11 +623,15 @@
                      }
                      updateNotes();
                 };
-                ar.addEventListener('change', toggleTimeline);
-                ro.addEventListener('change', toggleTimeline);
+                if(ar) ar.addEventListener('change', toggleTimeline);
+                if(ro) ro.addEventListener('change', toggleTimeline);
                 
-                getEl('rearrested').addEventListener('change', e => { patientData.rearrested = e.target.checked; updateNotes(); });
-                getEl('bystander_cpr').addEventListener('change', e => { patientData.bystanderCPR = e.target.checked; updateNotes(); });
+                const rr = getEl('rearrested');
+                if(rr) rr.addEventListener('change', e => { patientData.rearrested = e.target.checked; updateNotes(); });
+                
+                // FIXED: Added missing listener for Bystander CPR
+                const bcpr = getEl('bystander_cpr');
+                if(bcpr) bcpr.addEventListener('change', e => { patientData.bystanderCPR = e.target.checked; updateNotes(); });
 
                 // M2 Logic
                 const setM2 = (key, val) => {
@@ -634,7 +640,8 @@
                     calcMiracle2();
                 };
 
-                getEl('age').addEventListener('input', e => {
+                const elAge = getEl('age');
+                if(elAge) elAge.addEventListener('input', e => {
                     const v = parseInt(e.target.value);
                     patientData.age = v;
                     let p = 0; if(v>80) p=3; else if(v>=60) p=1;
@@ -643,7 +650,7 @@
                     calcMiracle2();
                 });
 
-                // FIX: Correctly targeting the Witness Status radio buttons
+                // FIXED: Correctly targeting the Witness Status radio buttons
                 document.querySelectorAll('input[name="witness_status"]').forEach(btn => {
                     btn.addEventListener('change', e => {
                         patientData.witnessStatus = e.target.value;
@@ -652,7 +659,8 @@
                     });
                 });
 
-                getEl('gas_ph').addEventListener('input', e => {
+                const elPh = getEl('gas_ph');
+                if(elPh) elPh.addEventListener('input', e => {
                     patientData.bloodGas.ph = e.target.value;
                     if(e.target.value && parseFloat(e.target.value) < 7.20) setM2('phLow', 1); else setM2('phLow', 0);
                     updateNotes();
