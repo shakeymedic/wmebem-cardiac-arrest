@@ -456,9 +456,8 @@
                 return `${d.getDate()}/${d.getMonth()+1} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
             }
 
-            // --- NOTE GENERATOR (UPDATED TO MATCH TRAUMA TOOL STYLE WITH VISIBLE TEMPLATE) ---
+            // --- NOTE GENERATOR ---
             function updateNotes() {
-                // Generates a visible template note that updates in real-time
                 const ts = getTime();
                 
                 let n = `<strong>Cardiac Arrest & ROSC Assessment</strong><br>`;
@@ -494,7 +493,6 @@
                 n += `&nbsp;&nbsp;&nbsp;RR: ${pr.breathing.rr||''} | Sats: ${pr.breathing.sats||''}% | EtCO2: ${pr.breathing.etco2||''}<br>`;
                 
                 // C
-                // Simple MAP calculation visual
                 let mapVal = pr.circulation.map || '';
                 if(!mapVal && pr.circulation.bp.includes('/')) {
                     const parts = pr.circulation.bp.split('/');
@@ -627,6 +625,7 @@
                 ro.addEventListener('change', toggleTimeline);
                 
                 getEl('rearrested').addEventListener('change', e => { patientData.rearrested = e.target.checked; updateNotes(); });
+                getEl('bystander_cpr').addEventListener('change', e => { patientData.bystanderCPR = e.target.checked; updateNotes(); });
 
                 // M2 Logic
                 const setM2 = (key, val) => {
@@ -644,10 +643,13 @@
                     calcMiracle2();
                 });
 
-                getEl('witness_status').addEventListener('change', e => {
-                    patientData.witnessStatus = e.target.value;
-                    setM2('missed', e.target.value === 'Unwitnessed' ? 1 : 0);
-                    updateNotes();
+                // FIX: Correctly targeting the Witness Status radio buttons
+                document.querySelectorAll('input[name="witness_status"]').forEach(btn => {
+                    btn.addEventListener('change', e => {
+                        patientData.witnessStatus = e.target.value;
+                        setM2('missed', e.target.value === 'Unwitnessed' ? 1 : 0);
+                        updateNotes();
+                    });
                 });
 
                 getEl('gas_ph').addEventListener('input', e => {
@@ -690,7 +692,8 @@
 
                 // Generic Binding
                 const bind = (id, root, key) => {
-                    getEl(id).addEventListener('input', e => { root[key] = e.target.value; updateNotes(); });
+                    const el = getEl(id);
+                    if(el) el.addEventListener('input', e => { root[key] = e.target.value; updateNotes(); });
                 };
                 
                 bind('patient_details', patientData, 'patientDetails');
@@ -731,7 +734,10 @@
                 bind('plan_ecg', patientData.plan, 'ecg');
                 bind('plan_management', patientData.plan, 'management');
 
-                ['time_collapse', 'time_rosc'].forEach(id => getEl(id).addEventListener('input', calcDowntime));
+                ['time_collapse', 'time_rosc'].forEach(id => {
+                    const el = getEl(id);
+                    if(el) el.addEventListener('input', calcDowntime);
+                });
 
                 document.querySelectorAll('input[name="airway_type"]').forEach(r => r.addEventListener('change', e => { patientData.postROSC.airway.type = e.target.value; updateNotes(); }));
                 document.querySelectorAll('input[name="breath_sounds"]').forEach(r => r.addEventListener('change', e => { patientData.postROSC.breathing.sounds = e.target.value; updateNotes(); }));
@@ -761,7 +767,7 @@
 
                 getEl('clearForm').addEventListener('click', () => { if(confirm('Reset form? All data will be lost.')) location.reload(); });
                 
-                // COPY HANDLER (UPDATED TO MATCH TRAUMA TOOL & ROBUST FOR RICH TEXT)
+                // COPY HANDLER
                 async function copyRichText(id) {
                     const el = getEl(id);
                     try {
