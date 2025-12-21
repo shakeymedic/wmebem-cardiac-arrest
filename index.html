@@ -472,8 +472,25 @@
                 
                 // Events Section
                 n += `<strong>Timeline & Events</strong><br>`;
-                n += `Arrest on Arrival: ${patientData.arrestOnArrival?'YES':'No'} | ROSC Achieved: ${patientData.roscAchieved?'YES':'No'}<br>`;
-                if(patientData.rearrested) n += `<strong>!!! PATIENT RE-ARRESTED POST-ROSC !!!</strong><br>`;
+                
+                // Narrative Logic (UPDATED per consultant feedback)
+                let eventNarrative = "";
+                if (patientData.arrestOnArrival) {
+                    eventNarrative = "On arrival to the department, the patient was in cardiac arrest.";
+                    if (patientData.roscAchieved) {
+                        eventNarrative += " ROSC was subsequently achieved in the department.";
+                    } else {
+                        eventNarrative += " ROSC has not yet been achieved.";
+                    }
+                } else {
+                    eventNarrative = "The patient had a pre-hospital cardiac arrest, but achieved ROSC prior to arrival in the department.";
+                }
+                
+                if(patientData.rearrested) {
+                     eventNarrative += `<br><strong>!!! PATIENT RE-ARRESTED POST-ROSC !!!</strong>`;
+                }
+                
+                n += `${eventNarrative}<br>`;
                 
                 const t = patientData.timeline;
                 n += `Times: Collapse ${t.collapse||''} | CPR ${t.cpr||''} | Defib ${t.defib||''} | ROSC ${t.rosc||''}<br>`;
