@@ -172,7 +172,42 @@
                     
                     <div class="space-y-3">
                         <div><label>History / PC</label><textarea id="prearrest_history" class="w-full px-3 py-2 border border-slate-400 rounded-md text-sm font-medium" placeholder="Events leading to arrest..."></textarea></div>
-                        <div><label>Pre-Arrest Interventions</label><textarea id="prearrest_interventions" class="w-full px-3 py-2 border border-slate-400 rounded-md text-sm font-medium" placeholder="Meds given..."></textarea></div>
+                    </div>
+                </div>
+
+                <div class="section-card border-l-[8px] border-l-orange-500">
+                    <div class="section-title text-orange-800">Pre-Hospital / Prior ALS</div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label>ALS Cycles Completed</label>
+                            <input type="number" id="ph_cycles" class="text-center font-bold text-lg" placeholder="0">
+                        </div>
+                        <div>
+                            <label>Shocks Delivered</label>
+                            <input type="number" id="ph_shocks" class="text-center font-bold text-lg" placeholder="0">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label>Drugs Administered</label>
+                        <div class="grid grid-cols-2 gap-4 mb-2">
+                            <div class="flex items-center border border-slate-300 rounded-md p-2 bg-slate-50">
+                                <span class="flex-1 font-bold text-xs sm:text-sm text-slate-700">Adrenaline (1mg)</span>
+                                <input type="number" id="ph_adrenaline" class="w-12 sm:w-16 text-center font-bold border-slate-400 rounded" placeholder="#">
+                            </div>
+                            <div class="flex items-center border border-slate-300 rounded-md p-2 bg-slate-50">
+                                <span class="flex-1 font-bold text-xs sm:text-sm text-slate-700">Amiodarone</span>
+                                <input type="number" id="ph_amiodarone" class="w-12 sm:w-16 text-center font-bold border-slate-400 rounded" placeholder="#">
+                            </div>
+                        </div>
+                        <input type="text" id="ph_other_drugs" class="font-medium" placeholder="Other drugs (e.g. Calcium, Atropine)...">
+                    </div>
+
+                    <div>
+                        <label>Pre-Hospital Rhythms (Observed)</label>
+                        <div id="phRhythms" class="flex flex-wrap gap-2">
+                            </div>
                     </div>
                 </div>
 
@@ -224,9 +259,9 @@
                                 <div id="initialRhythm" class="flex flex-wrap gap-2"></div>
                             </div>
                             <div>
-                                <label class="text-blue-800">Shocks</label>
+                                <label class="text-blue-800">Shocks (ED/Total)</label>
                                 <input type="number" id="shocks" class="border-blue-300 font-bold mb-2">
-                                <label class="text-blue-800">Arrest Drugs</label>
+                                <label class="text-blue-800">Arrest Drugs (ED)</label>
                                 <textarea id="prehospital_drugs" class="border-blue-300 font-medium" rows="1"></textarea>
                             </div>
                         </div>
@@ -425,6 +460,9 @@
                 age: '', patientDetails: '',
                 witnessStatus: 'Unwitnessed', bystanderCPR: false,
                 prearrest: { history: '', interventions: '' },
+                // NEW: Pre-Hospital ALS Data
+                prehospitalALS: { cycles: '', shocks: '', adrenaline: '', amiodarone: '', otherDrugs: '', rhythms: [] },
+                
                 arrestOnArrival: false, roscAchieved: false, rearrested: false,
                 timeline: { collapse: '', cpr: '', defib: '', rosc: '', downtime: '' },
                 rhythms: [], shocks: '', prehospital_drugs: '',
@@ -469,6 +507,13 @@
                 n += `Witnessed: ${patientData.witnessStatus} | Bystander CPR: ${patientData.bystanderCPR?'YES':'No'}<br>`;
                 n += `Hx: ${patientData.prearrest.history||''}<br>`;
                 n += `Pre-Arrest Rx: ${patientData.prearrest.interventions||''}<br><br>`;
+
+                // NEW: Pre-Hospital ALS
+                n += `<strong>Pre-Hospital ALS Summary</strong><br>`;
+                const ph = patientData.prehospitalALS;
+                n += `Cycles: ${ph.cycles||'0'} | Shocks: ${ph.shocks||'0'}<br>`;
+                n += `Drugs: Adrenaline x${ph.adrenaline||'0'}, Amiodarone x${ph.amiodarone||'0'}. ${ph.otherDrugs||''}<br>`;
+                n += `Previous Rhythms: ${ph.rhythms.join(', ')}<br><br>`;
                 
                 // Events Section
                 n += `<strong>Timeline & Events</strong><br>`;
@@ -495,8 +540,8 @@
                 const t = patientData.timeline;
                 n += `Times: Collapse ${t.collapse||''} | CPR ${t.cpr||''} | Defib ${t.defib||''} | ROSC ${t.rosc||''}<br>`;
                 n += `Total Downtime: ${t.downtime||''} mins<br>`;
-                n += `Rhythms: ${patientData.rhythms.join(', ')}<br>`;
-                n += `Shocks: ${patientData.shocks||''} | Arrest Drugs: ${patientData.prehospital_drugs||''}<br><br>`;
+                n += `Initial Rhythms: ${patientData.rhythms.join(', ')}<br>`;
+                n += `Shocks (ED): ${patientData.shocks||''} | Arrest Drugs (ED): ${patientData.prehospital_drugs||''}<br><br>`;
                 
                 // Post-ROSC Section
                 n += `<strong>Post-ROSC Survey</strong><br>`;
@@ -576,6 +621,8 @@
                 const mkCheck = (val, id) => `<label class="cursor-pointer flex items-center space-x-2 p-1.5 border border-slate-300 rounded hover:bg-slate-50 transition bg-white"><input type="checkbox" value="${val}" class="${id} w-4 h-4 text-blue-600 rounded border-slate-400"> <span class="text-xs font-bold text-slate-700">${val}</span></label>`;
                 
                 getEl('initialRhythm').innerHTML = RHYTHMS.map(r => mkCheck(r, 'rhythm-check')).join('');
+                // NEW: Populate Pre-Hospital Rhythms
+                getEl('phRhythms').innerHTML = RHYTHMS.map(r => mkCheck(r, 'ph-rhythm-check')).join('');
                 getEl('reversibles').innerHTML = REVERSIBLES.map(r => mkCheck(r, 'rev-check')).join('');
 
                 // Miracle 2 Rows
@@ -646,7 +693,6 @@
                 const rr = getEl('rearrested');
                 if(rr) rr.addEventListener('change', e => { patientData.rearrested = e.target.checked; updateNotes(); });
                 
-                // FIXED: Added missing listener for Bystander CPR
                 const bcpr = getEl('bystander_cpr');
                 if(bcpr) bcpr.addEventListener('change', e => { patientData.bystanderCPR = e.target.checked; updateNotes(); });
 
@@ -667,7 +713,6 @@
                     calcMiracle2();
                 });
 
-                // FIXED: Correctly targeting the Witness Status radio buttons
                 document.querySelectorAll('input[name="witness_status"]').forEach(btn => {
                     btn.addEventListener('change', e => {
                         patientData.witnessStatus = e.target.value;
@@ -683,6 +728,7 @@
                     updateNotes();
                 });
 
+                // Rhythm Listeners (Both ED and Pre-Hospital)
                 document.body.addEventListener('change', e => {
                     if(e.target.classList.contains('rhythm-check')) {
                         const val = e.target.value;
@@ -693,6 +739,12 @@
                         setM2('nonShockable', nonShock ? 1 : 0);
                         updateNotes();
                     }
+                    if(e.target.classList.contains('ph-rhythm-check')) {
+                        const val = e.target.value;
+                        if(e.target.checked) patientData.prehospitalALS.rhythms.push(val); 
+                        else patientData.prehospitalALS.rhythms = patientData.prehospitalALS.rhythms.filter(x=>x!==val);
+                        updateNotes();
+                    }
                 });
 
                 document.querySelectorAll('input[name="pupilReactivity"]').forEach(el => el.addEventListener('change', e => {
@@ -701,7 +753,6 @@
                     updateNotes();
                 }));
 
-                // M2 Manual Override
                 document.querySelectorAll('input[name^="m2_"]').forEach(el => {
                     el.addEventListener('change', e => {
                         const key = e.target.name.replace('m2_', '');
@@ -710,7 +761,6 @@
                     });
                 });
 
-                // Auto-expand textarea
                 document.querySelectorAll('textarea').forEach(el => {
                     el.addEventListener('input', function(){ this.style.height='auto'; this.style.height=this.scrollHeight+'px'; });
                 });
@@ -723,7 +773,14 @@
                 
                 bind('patient_details', patientData, 'patientDetails');
                 bind('prearrest_history', patientData.prearrest, 'history');
-                bind('prearrest_interventions', patientData.prearrest, 'interventions');
+                
+                // NEW: Pre-Hospital Bindings
+                bind('ph_cycles', patientData.prehospitalALS, 'cycles');
+                bind('ph_shocks', patientData.prehospitalALS, 'shocks');
+                bind('ph_adrenaline', patientData.prehospitalALS, 'adrenaline');
+                bind('ph_amiodarone', patientData.prehospitalALS, 'amiodarone');
+                bind('ph_other_drugs', patientData.prehospitalALS, 'otherDrugs');
+
                 bind('time_collapse', patientData.timeline, 'collapse');
                 bind('time_cpr', patientData.timeline, 'cpr');
                 bind('time_defib', patientData.timeline, 'defib');
